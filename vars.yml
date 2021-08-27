@@ -1,0 +1,74 @@
+---
+resource_group: rhelgroup
+public_ip_name: rhelgroupip
+vn_name: mynetwork
+security_group_name: rhel_sg
+lb_name: mylb
+location: eastus
+admin_username: johndoe
+admin_password: johngt123
+vn_address_var: "10.1.0.0/16"
+sat_instance:
+  name: satserver
+  size: "Standard_D8s_v4"
+  storage_size: 500
+  storage_name: sat_storage
+  ip_name: sat_ip
+  subnet_info:
+    nic_name: sat_nic
+    subnet_name: sat_subnet
+    address_var: "10.1.1.0/24"
+    sg_name: satsg1
+cap_instance:
+  name: capserver
+  size: "Standard_D4s_v4"
+  storage_size: 500
+  storage_name: cap_storage
+  ip_name: cap_ip
+  subnet_info:
+    nic_name: cap_nic
+    subnet_name: cap_subnet
+    address_var: "10.1.2.0/24"
+    sg_name: capsg1
+sg_groups:
+  - sg_name: satsg1
+    rules:
+      - {name: AllowHttps, protocol: Tcp, value: 443, direction: Inbound, priority: 101, addr: "10.1.1.0/24"}
+      - {name: AllowHttp, protocol: Tcp, value: 80, direction: Inbound, priority: 102, addr: "10.1.1.0/24"}
+      - {name: AllowQpid, protocol: Tcp, value: 5646, direction: Inbound, priority: 103, addr: "10.1.1.0/24"}
+      - {name: AllowKatello, protocol: Tcp, value: 5647, direction: Inbound, priority: 104, addr: "10.1.1.0/24"}
+      - {name: AllowConda, protocol: Tcp, value: 8000, direction: Inbound, priority: 105, addr: "10.1.1.0/24"}
+      - {name: AllowPuppet, protocol: Tcp, value: 8140, direction: Inbound, priority: 106, addr: "10.1.1.0/24"}
+      - {name: AllowSCAP, protocol: Tcp, value: 9090, direction: Inbound, priority: 107, addr: "10.1.1.0/24"}
+      - {name: AllowDCHP, protocol: Tcp, value: 7, direction: Inbound, priority: 108, addr: "10.1.1.0/24"}
+      - {name: AllowDNS, protocol: Tcp, value: 53, direction: Inbound, priority: 109, addr: "10.1.1.0/24"}
+      - {name: AllowDocker, protocol: Tcp, value: 5000, direction: Inbound, priority: 110, addr: "10.1.1.0/24"}
+      - {name: AllowSSH, protocol: Tcp, value: 22, direction: Inbound, priority: 111, addr: "10.1.1.0/24"}
+      - {name: AllowDHCP, protocol: Udp, value: 7, direction: Inbound, priority: 112, addr: "10.1.1.0/24"}
+      - {name: AllowDNS, protocol: Udp, value: 53, direction: Inbound, priority: 113, addr: "10.1.1.0/24"}
+      - {name: AllowBroadcast, protocol: Udp, value: 67, direction: Inbound, priority: 114, addr: "10.1.1.0/24"}
+      - {name: AllowPXE, protocol: Udp, value: 69, direction: Inbound, priority: 115, addr: "10.1.1.0/24"}
+      - {name: AllowPulp, protocol: Tcp, value: 443, direction: Outbound, priority: 116, addr: "10.1.1.0/24"}
+      - {name: AllowProxy, protocol: Tcp, value: 9090, direction: Outbound, priority: 117, addr: "10.1.1.0/24"}
+      - {name: AllowBootdisk, protocol: Tcp, value: 80, direction: Outbound, priority: 118, addr: "10.1.1.0/24"}
+  - sg_name: capsg1
+    rules:
+      - {name: AllowAmqp, protocol: Tcp, value: 5646, direction: Inbound, priority: 101, addr: "10.1.2.0/24"}
+      - {name: AllowHttp, protocol: Tcp, value: 80, direction: Inbound, priority: 102, addr: "10.1.2.0/24"}
+      - {name: AllowHttps, protocol: Tcp, value: 443, direction: Inbound, priority: 103, addr: "10.1.2.0/24"}
+      - {name: AllowKatello, protocol: Tcp, value: 5647, direction: Inbound, priority: 104, addr: "10.1.2.0/24"}
+      - {name: AllowConda, protocol: Tcp, value: 8000, direction: Inbound, priority: 105, addr: "10.1.2.0/24"}
+      - {name: AllowPuppet, protocol: Tcp, value: 8140, direction: Inbound, priority: 106, addr: "10.1.2.0/24"}
+      - {name: AllowSubs, protocol: Tcp, value: 8443, direction: Inbound, priority: 107, addr: "10.1.2.0/24"}
+      - {name: AllowSCAP, protocol: Tcp, value: 9090, direction: Inbound, priority: 108, addr: "10.1.2.0/24"}
+      - {name: AllowDNS, protocol: Tcp, value: 53, direction: Inbound, priority: 109, addr: "10.1.2.0/24"}
+      - {name: AllowSSH, protocol: Tcp, value: 22, direction: Inbound, priority: 110, addr: "10.1.2.0/24"}
+      - {name: AllowDocker, protocol: Tcp, value: 5000, direction: Inbound, priority: 111, addr: "10.1.2.0/24"}
+      - {name: AllowDNS, protocol: Udp, value: 53, direction: Inbound, priority: 112, addr: "10.1.2.0/24"}
+      - {name: AllowDCHP, protocol: Udp, value: 67, direction: Inbound, priority: 113, addr: "10.1.2.0/24"}
+      - {name: AllowTFTP, protocol: Udp, value: 69, direction: Inbound, priority: 114, addr: "10.1.2.0/24"}
+      - {name: AllowDHCP, protocol: Tcp, value: 7, direction: Outbound, priority: 115, addr: "10.1.2.0/24"}
+      - {name: AllowClient, protocol: Tcp, value: 8443, direction: Outbound, priority: 116, addr: "10.1.2.0/24"}
+      - {name: AllowBroadcast, protocol: Udp, value: 68, direction: Outbound, priority: 117, addr: "10.1.2.0/24"}
+key_data:
+...

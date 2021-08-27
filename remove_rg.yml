@@ -1,0 +1,14 @@
+---
+- name: Eliminar grupo de recursos
+  hosts: localhost
+  tasks:
+    - name: Incluir archivo de variables
+      include_vars:
+        file: variables.yml
+
+    - name: Eliminando el grupo de recursos...
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        state: absent
+        force_delete_nonempty: yes
+...
