@@ -1,7 +1,7 @@
 # GBM-Azure-SatEnv
 This project prepares and deploys an environment in Microsoft Azure for use with Red Hat Satellite. Both server instances are configured with the necessary hardware specifications, OS, as well as the ports used for communication between the environment and external clients. A load balancer is provided in case you are planning to provision instances within Azure however it's not necessary.
 # Requirements
-- **Ansible**: Use your default package manager to install Ansible (apt|yum|etc). Nore info on installing Ansible [here](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).
+- **Ansible**: Use your default package manager to install Ansible (apt|yum|etc). More info on installing Ansible [here](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).
 - **Ansible Tower (Optional)**: More info [here](https://docs.ansible.com/ansible-tower/2.2.2/html/quickinstall/index.html).
 - **Ansible Tower License (Optional)**: More info [here](https://www.redhat.com/en/technologies/management/ansible/try-it). 
 - **Microsoft Azure Account**: You can obtain a month membership with $200 in credit when creating a new account in Microsoft Azure. More info [here](https://azure.microsoft.com/en-us/free/). 
