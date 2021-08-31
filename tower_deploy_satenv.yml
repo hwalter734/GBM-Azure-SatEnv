@@ -1,0 +1,219 @@
+---
+- name: Creation of a Red Hat Satellite environment
+  hosts: localhost
+  tasks:
+    - name: Creating an azure resource group...
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: "{{ location }}"
+
+    - name: Validate ip addresses...
+      block:
+        - name: Obtaining user's ip addresses...
+          set_fact:
+            ip_var: "{{ vn_address | ipaddr }}"
+            ip_var_subnet_1: "{{ sat_address | ipaddr }}"
+            ip_var_subnet_2: "{{ cap_address | ipaddr }}"
+
+        - name: Checking virtual network ip...
+          fail:
+            msg: The provided ip is not valid, please enter a valid ip
+          when: ip_var == false
+
+        - name: Checking virtual subnet's ip...
+          fail:
+            msg: One or more of the provided ip is not valid, please enter a valid ip
+          when: ip_var_subnet_1 == false or ip_var_subnet_2 == false
+
+    - name: Creating ingress/egress UDP/TCP rules for main Satellite server...
+      azure_rm_securitygroup:
+        name: "{{ sat_sg_name }}"
+        resource_group: "{{ resource_group }}"
+        rules:
+          - name: "{{ sat_intcp_name }}"
+            protocol: Tcp
+            destination_port_range: "{{ sat_intcp_ports }}"
+            access: Allow
+            direction: Inbound
+            priority: 101
+            destination_address_prefix: "{{ sat_address }}"
+          - name: "{{ sat_egtcp_name }}"
+            protocol: Tcp
+            destination_port_range: "{{ sat_egtcp_ports }}"
+            access: Allow
+            direction: Outbound
+            priority: 102
+            destination_address_prefix: "{{ sat_address }}"
+          - name: "{{ sat_inudp_name }}"
+            protocol: Udp
+            destination_port_range: "{{ sat_inudp_ports }}"
+            access: Allow
+            direction: Inbound
+            priority: 103
+            destination_address_prefix: "{{ sat_address }}"
+        state: present
+
+    - name: Creating ingress/egress UDP/TCP rules for main Capsule server...
+      azure_rm_securitygroup:
+        name: "{{ cap_sg_name }}"
+        resource_group: "{{ resource_group }}"
+        rules:
+          - name: "{{ cap_intcp_name }}"
+            protocol: Tcp
+            destination_port_range: "{{ cap_intcp_ports }}"
+            access: Allow
+            direction: Inbound
+            priority: 101
+            destination_address_prefix: "{{ cap_address }}"
+          - name: "{{ cap_egtcp_name }}"
+            protocol: Tcp
+            destination_port_range: "{{ cap_egtcp_ports }}"
+            access: Allow
+            direction: Outbound
+            priority: 102
+            destination_address_prefix: "{{ cap_address }}"
+          - name: "{{ cap_inudp_name }}"
+            protocol: Udp
+            destination_port_range: "{{ cap_inudp_ports }}"
+            access: Allow
+            direction: Inbound
+            priority: 103
+            destination_address_prefix: "{{ cap_address }}"
+          - name: "{{ cap_egudp_name }}"
+            protocol: Tcp
+            destination_port_range: "{{ cap_egudp_ports }}"
+            access: Allow
+            direction: Outbound
+            priority: 104
+            destination_address_prefix: "{{ cap_address }}"
+        state: present
+
+    - name: Creating the virtual network...
+      azure_rm_virtualnetwork:
+        name: "{{ vn_name }}"
+        resource_group: "{{ resource_group }}"
+        address_prefixes: "{{ ip_var }}"
+
+    - name: Creating the Satellite subnet...
+      azure_rm_subnet:
+        name: "{{ sat_subnet_name }}"
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: "{{ sat_address }}"
+        virtual_network: "{{ vn_name }}"
+        security_group: "{{ sat_sg_name }}"
+
+    - name: Creating the Capsule subnet...
+      azure_rm_subnet:
+        name: "{{ cap_subnet_name }}"
+        resource_group: "{{ resource_group }}"
+        address_prefix_cidr: "{{ cap_address }}"
+        virtual_network: "{{ vn_name }}"
+        security_group: "{{ cap_sg_name }}"
+
+    - name: Creating a public ip address for the loadbalancer and the two instances
+      azure_rm_publicipaddress:
+        name: "{{ item }}"
+        resource_group: "{{ resource_group }}"
+        allocation_method: Static
+      with_items:
+        - "{{ public_ip_name }}"
+        - "{{ sat_ip_name }}"
+        - "{{ cap_ip_name }}"
+
+    - name: Creating a virtual network interface card for the Satellite instance...
+      azure_rm_networkinterface:
+        name: "{{ sat_nic_name }}"
+        resource_group: "{{ resource_group }}"
+        virtual_network: "{{ vn_name }}"
+        subnet: "{{ sat_subnet_name }}"
+        public_ip_name: "{{ sat_ip_name }}"
+        security_group: "{{ sat_sg_name }}"
+
+    - name: Creating a virtual network interface card for the Capsule instance...
+      azure_rm_networkinterface:
+        name: "{{ cap_nic_name }}"
+        resource_group: "{{ resource_group }}"
+        virtual_network: "{{ vn_name }}"
+        subnet: "{{ cap_subnet_name }}"
+        public_ip_name: "{{ cap_ip_name }}"
+        security_group: "{{ cap_sg_name }}"
+
+    - name: Creating the load balancer...
+      azure_rm_loadbalancer:
+        resource_group: "{{ resource_group }}"
+        name: "{{ lb_name }}"
+        location: "{{ location }}"
+        frontend_ip_configurations:
+          - name: "{{ resource_group }}-front-config"
+            public_ip_address: "{{ public_ip_name }}"
+        backend_address_pools:
+          - name: "{{ resource_group }}-backend-pool"
+        probes:
+          - name: "{{ resource_group }}-prob0"
+            port: 8080
+            interval: 10
+            fail_count: 3
+        inbound_nat_pools:
+          - name: "{{ resource_group }}-nat-pool"
+            frontend_ip_configuration_name: "{{ resource_group }}-front-config"
+            protocol: Tcp
+            frontend_port_range_start: 50000
+            frontend_port_range_end: 50040
+            backend_port: 22
+        load_balancing_rules:
+          - name: "{{ resource_group }}-lbs-rules"
+            frontend_ip_configuration: "{{ resource_group }}-front-config"
+            backend_address_pool: "{{ resource_group }}-backend-pool"
+            frontend_port: 80
+            backend_port: 8080
+            load_distribution: Default
+            probe: "{{ resource_group }}-prob0"
+
+    - name: Creating the Satellite instance...
+      azure_rm_virtualmachine:
+        name: "{{ sat_instance_name }}"
+        admin_username: "{{ admin_username }}"
+        resource_group: "{{ resource_group }}"
+        virtual_network_name: "{{ vn_name }}"
+        vm_size: "{{ sat_instance_size }}"
+        subnet_name: "{{ sat_subnet_name }}"
+        os_type: Linux
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/{{ admin_username }}/.ssh/authorized_keys
+            key_data: "{{ key_data }}"
+        image:
+          publisher: RedHat
+          offer: RHEL
+          sku: "7_9"
+          version: "7.9.2021051701"
+        data_disks:
+          - lun: 0
+            caching: ReadWrite
+            disk_size_gb: "{{ storage_size }}"
+        state: present
+
+    - name: Creating the Capsule instance...
+      azure_rm_virtualmachine:
+        name: "{{ cap_instance_name }}"
+        admin_username: "{{ admin_username }}"
+        resource_group: "{{ resource_group }}"
+        virtual_network_name: "{{ vn_name }}"
+        vm_size: "{{ cap_instance_size }}"
+        subnet_name: "{{ cap_subnet_name }}"
+        os_type: Linux
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/{{ admin_username }}/.ssh/authorized_keys
+            key_data: "{{ key_data }}"
+        image:
+          publisher: RedHat
+          offer: RHEL
+          sku: "7_9"
+          version: "7.9.2021051701"
+        data_disks:
+          - lun: 0
+            caching: ReadWrite
+            disk_size_gb: "{{ storage_size }}"
+        state: present
+...
