@@ -1,0 +1,31 @@
+---
+- name: Setup attached volume
+  hosts: rhel_hosts
+  gather_facts: true
+  become: true
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Creating XFS filesystem...
+      filesystem:
+        dev: "/dev/sdb"
+        fstype: xfs
+
+    - name: Creating directory to mount XFS filesystem...
+      file:
+        state: directory
+        path: /mnt/satdata
+
+    - name: Mounting volume...
+      mount:
+        path: /mnt/satdata
+        src: /dev/sdb
+        fstype: xfs
+        state: mounted
+
+    - name: Making volume mountable at boot...
+      lineinfile:
+        path: /etc/fstab
+        regexp: "/dev/sdb /mnt/satdata xfs defaults 0 0"
+        line: "/dev/sdb /mnt/satdata xfs defaults 0 2"
+        state: present
