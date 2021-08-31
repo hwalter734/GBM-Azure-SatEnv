@@ -1,0 +1,8 @@
+---
+plugin: azure_rm
+include_vm_resource_groups:
+  - rhelgroup
+auth_source: auto
+conditional_groups:
+  rhel_hosts: "'RHEL' in image.offer"
+...
