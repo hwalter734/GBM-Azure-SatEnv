@@ -7,10 +7,16 @@ This project prepares and deploys an environment in Microsoft Azure for use with
 - **Microsoft Azure Account**: You can obtain a month membership with $200 in credit when creating a new account in Microsoft Azure. More info [here](https://azure.microsoft.com/en-us/free/). 
 
 ## Packages Installation 
-```pip install 'ansible[azure]'```
+```
+pip install 'ansible[azure]'
+```
 
 ## SSH Key Pair
-You must create a SSH key pair to communicate with your Azure instances. The following command will create a key pair for you ```ssh-keygen -m PEM -t rsa -b 4096 nameofyourkey```. After your key has been created you must copy the content of the key into the **key_data** variable in the **variables.yml** file.
+You must create a SSH key pair to communicate with your Azure instances. The following command will create a key pair for you 
+```
+ssh-keygen -m PEM -t rsa -b 4096 -f nameofyourkey
+```
+After your key has been created you must copy the content of the key into the **key_data** variable in the **variables.yml** file.
 
 ## Microsoft Azure Account Authentication
 You can authenticate your account by using the following command `az login`. For other ways to authenticate your account click the following [link](https://docs.ansible.com/ansible/latest/scenario_guides/guide_azure.html#providing-credentials-to-azure-modules).
