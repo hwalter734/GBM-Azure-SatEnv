@@ -19,7 +19,11 @@ ssh-keygen -m PEM -t rsa -b 4096 -f nameofyourkey
 After your key has been created you must copy the content of the key into the **key_data** variable in the **variables.yml** file.
 
 ## Microsoft Azure Account Authentication
-You can authenticate your account by using the following command `az login`. For other ways to authenticate your account click the following [link](https://docs.ansible.com/ansible/latest/scenario_guides/guide_azure.html#providing-credentials-to-azure-modules).
+You can authenticate your account by using the following command:
+```
+az login
+```
+For other ways to authenticate your account click the following [link](https://docs.ansible.com/ansible/latest/scenario_guides/guide_azure.html#providing-credentials-to-azure-modules).
 
 ## Ansible Tower Environment
 Ansible Tower needs your credentials to launch the job template containing the playbook. Go to *Credentials*, choose type *Microsoft Azure Resource Manager*. Enter your username and password. To obtain your *Subscription ID* and *Tenant ID* you can run the following command `az account list`. The ID is your *Subscription ID* and your tenat is your *Tenant ID*. You can leave the other fields blank. 
