@@ -1,6 +1,6 @@
 Vagrant.configure("2") do |config|
   config.vm.define "Tower" do |ansible1|
-    ansible1.vm.box = "centos/7"
+    ansible1.vm.box = "generic/rhel7"
     ansible1.vm.hostname = "RedHat.hl.local"
     ansible1.vm.network "private_network", ip: "{{ ansible_default_ipv4.address }}"
     ansible1.vm.disk :disk, size: '50GB', primary: true
