@@ -1,0 +1,25 @@
+---
+- name: Setup vagrant
+  hosts: rhel_hosts
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Install vagrant
+      shell: |
+        sudo yum install -y yum-utils
+        sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+        sudo yum -y install vagrant
+
+    - name:
+      copy:
+        src: vagrantfile.j2
+        dest: vagrantfile.j2
+
+    - name:
+      template:
+        src: vagrantfile.j2
+        dest: Vagrantfile
+      delegate_to: rhel_hosts
+
+    - name: Setup Ansible Tower
+      shell: vagrant up
